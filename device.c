@@ -43,6 +43,7 @@ static int32_t read_frame(process_cb cb)
 	}
 	assert (buf.index < pdev->n_buffers);
 	//process_image (pdev->buffers[buf.index].start);
+	memcpy(pdev->current_frame.frame, pdev->buffers[buf.index].start, pdev->current_frame.length);
 	cb(pdev->buffers[buf.index].start, pdev->buffers[buf.index].length);
 
 	if (-1 == xioctl (pdev->fd, VIDIOC_QBUF, &buf)) {
@@ -56,6 +57,7 @@ static int32_t read_frame(process_cb cb)
 static void init_mmap(void)
 {
 	device_t *pdev = &gdev;
+	struct v4l2_buffer buf;
 	struct v4l2_requestbuffers req;
 
 	memset(&req, 0x0, sizeof(struct v4l2_requestbuffers));
@@ -89,7 +91,6 @@ static void init_mmap(void)
 	}
 
 	for (pdev->n_buffers = 0; pdev->n_buffers < req.count; ++pdev->n_buffers) {
-		struct v4l2_buffer buf;
 		memset (&buf, 0x0, sizeof(struct v4l2_buffer));
 		buf.type        = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 		buf.memory      = V4L2_MEMORY_MMAP;
@@ -109,7 +110,25 @@ static void init_mmap(void)
 		}
 	}
 
+	pdev->current_frame.frame = (uint8_t *)malloc(buf.length);
+	if (NULL == pdev->current_frame.frame)
+	{
+		dbg_e("current_frame alloc fail\n");
+		return;
+	}
+	pdev->current_frame.length = buf.length;
+
 	return;
+}
+
+current_frame_t *capture_once(void)
+{
+	device_t *pdev = &gdev;
+
+	if (NULL == pdev->current_frame.frame)
+		return NULL;
+
+	return &pdev->current_frame;
 }
 
 void capture_loop(process_cb cb, capture_method mode)
@@ -325,6 +344,8 @@ void device_uninit(void)
 			return ;
 		}
 	}
+	pdev->current_frame.length = 0;
+	free(pdev->current_frame.frame);
 	free(pdev->buffers);
 
 	return;

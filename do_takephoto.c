@@ -9,7 +9,6 @@
 extern "C" {
 #endif
 
-static pthread_t pid = -1;
 static uint32_t picid = 0;
 
 static void yuv2rgb(const unsigned char *im_yuv, unsigned char *dst)
@@ -75,42 +74,18 @@ static void process_frame(unsigned char *pdata, int len)
 	return;
 }
 
-static void *takephoto(void *arg)
-{
-	dbg_i("takephoto\n");
-
-	/* Todo open device */
-	device_open("/dev/video0");
-
-	/* Todo init device */
-	device_init();
-
-	/* Todo start capturing */
-	capture_start();
-
-	/* Todo loop */
-	capture_loop(process_frame, CAPTURE_ONCE);
-
-	/* Todo stop capturing */
-	capture_stop();
-
-	/* Todo uninit device */
-	device_uninit();
-
-	/* Todo close device */
-	device_close();
-
-	return NULL;
-}
-
 int32_t do_takephoto(msg_t *pmsg)
 {
 	int32_t ret = GCOS_SUCC;
+	current_frame_t *pframe = NULL;
 
-	if (GCOS_SUCC != pthread_create(&pid ,NULL, takephoto, NULL))
+	pframe = capture_once();
+	if (pframe->frame)
 	{
+		dbg_e("capture photo once fail\n");
 		return GCOS_FAIL;
 	}
+	process_frame(pframe->frame, pframe->length);
 
 	return ret;
 }

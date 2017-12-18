@@ -22,14 +22,23 @@ struct buffer
 
 typedef struct
 {
+	uint8_t	 *frame;
+	uint32_t length;
+} current_frame_t;
+
+typedef struct
+{
 	char devname[16];
 	int32_t fd;
 	capture_method mode;
 	int32_t n_buffers;
+	current_frame_t current_frame;
 	struct buffer *buffers;
 } device_t;
 
 typedef void (*process_cb)(unsigned char * psrc, int32_t len);
+
+extern current_frame_t *capture_once(void);
 
 extern void capture_loop(process_cb cb, capture_method);
 
