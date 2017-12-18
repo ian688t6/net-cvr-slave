@@ -13,6 +13,7 @@ C_SRCS += \
 ../do_setting.c \
 ../do_takephoto.c \
 ../h264.c \
+../jpeg.c \
 ../main.c \
 ../msg.c 
 
@@ -26,6 +27,7 @@ OBJS += \
 ./do_setting.o \
 ./do_takephoto.o \
 ./h264.o \
+./jpeg.o \
 ./main.o \
 ./msg.o 
 
@@ -39,6 +41,7 @@ C_DEPS += \
 ./do_setting.d \
 ./do_takephoto.d \
 ./h264.d \
+./jpeg.d \
 ./main.d \
 ./msg.d 
 

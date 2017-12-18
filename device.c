@@ -19,54 +19,35 @@ static int32_t xioctl(int32_t fd, int32_t request, void *arg)
 	return r;
 }
 
-//static void process_image(const void *p)
-//{
-//	fputc('.', stdout);
-//	fflush(stdout);
-//	return;
-//}
-
 static int32_t read_frame(process_cb cb)
 {
 	device_t *pdev = &gdev;
 	struct v4l2_buffer buf;
 
-	switch (pdev->io_mode)
-	{
-	case IO_METHOD_MMAP:
-		memset(&buf, 0x0, sizeof(struct v4l2_buffer));
-		buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-		buf.memory = V4L2_MEMORY_MMAP;
-		if (-1 == xioctl (pdev->fd, VIDIOC_DQBUF, &buf)) {
-			switch(errno)
-			{
-			case EAGAIN:
-			case EIO:
-				return GCOS_FAIL;
-				break;
-
-			default:
-				dbg_e("VIDIOC_DQBUF");
-				return GCOS_FAIL;
-				break;
-			}
-		}
-		assert (buf.index < pdev->n_buffers);
-		//process_image (pdev->buffers[buf.index].start);
-		cb(pdev->buffers[buf.index].start, pdev->buffers[buf.index].length);
-
-		if (-1 == xioctl (pdev->fd, VIDIOC_QBUF, &buf)) {
-			dbg_e ("VIDIOC_QBUF");
+	memset(&buf, 0x0, sizeof(struct v4l2_buffer));
+	buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+	buf.memory = V4L2_MEMORY_MMAP;
+	if (-1 == xioctl (pdev->fd, VIDIOC_DQBUF, &buf)) {
+		switch(errno)
+		{
+		case EAGAIN:
+		case EIO:
 			return GCOS_FAIL;
+			break;
+
+		default:
+			dbg_e("VIDIOC_DQBUF");
+			return GCOS_FAIL;
+			break;
 		}
-		break;
+	}
+	assert (buf.index < pdev->n_buffers);
+	//process_image (pdev->buffers[buf.index].start);
+	cb(pdev->buffers[buf.index].start, pdev->buffers[buf.index].length);
 
-	case IO_METHOD_READ:
-	case IO_METHOD_USERPTR:
-		break;
-
-	default:
-		break;
+	if (-1 == xioctl (pdev->fd, VIDIOC_QBUF, &buf)) {
+		dbg_e ("VIDIOC_QBUF");
+		return GCOS_FAIL;
 	}
 
 	return GCOS_SUCC;
@@ -131,11 +112,12 @@ static void init_mmap(void)
 	return;
 }
 
-void capture_loop(process_cb cb)
+void capture_loop(process_cb cb, capture_method mode)
 {
 	device_t *pdev = &gdev;
+	pdev->mode = mode;
 
-	for (;;) {
+	do {
 		fd_set fds;
 		struct timeval tv;
 		int r;
@@ -159,9 +141,10 @@ void capture_loop(process_cb cb)
 			return ;
 		}
 
-		if (read_frame (cb))
-			break;
-	}
+		if (GCOS_SUCC != read_frame (cb))
+			return;
+
+	} while (pdev->mode);
 
 	return;
 }
@@ -172,33 +155,24 @@ void capture_start(void)
 	enum v4l2_buf_type type;
 	device_t *pdev = &gdev;
 
-	switch(pdev->io_mode)
+	for (i = 0; i < pdev->n_buffers; ++i)
 	{
-	case IO_METHOD_MMAP:
-		for (i = 0; i < pdev->n_buffers; ++i) {
-			struct v4l2_buffer buf;
-			memset (&buf, 0x0, sizeof(struct v4l2_buffer));
-			buf.type        = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-			buf.memory      = V4L2_MEMORY_MMAP;
-			buf.index       = i;
+		struct v4l2_buffer buf;
+		memset (&buf, 0x0, sizeof(struct v4l2_buffer));
+		buf.type        = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+		buf.memory      = V4L2_MEMORY_MMAP;
+		buf.index       = i;
 
-			if (-1 == xioctl (pdev->fd, VIDIOC_QBUF, &buf)) {
-				dbg_e ("VIDIOC_QBUF");
-				return ;
-			}
+		if (-1 == xioctl (pdev->fd, VIDIOC_QBUF, &buf)) {
+			dbg_e ("VIDIOC_QBUF");
+			return ;
 		}
+	}
 
-		type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-		if (-1 == xioctl (pdev->fd, VIDIOC_STREAMON, &type)) {
-			dbg_e ("VIDIOC_STREAMON");
-			return;
-		}
-
-		break;
-
-	case IO_METHOD_READ:
-	case IO_METHOD_USERPTR:
-		break;
+	type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+	if (-1 == xioctl (pdev->fd, VIDIOC_STREAMON, &type)) {
+		dbg_e ("VIDIOC_STREAMON");
+		return;
 	}
 
 	return;
@@ -209,29 +183,10 @@ void capture_stop(void)
 	enum v4l2_buf_type type;
 	device_t *pdev = &gdev;
 
-	switch(pdev->io_mode)
-	{
-	case IO_METHOD_READ:
-	case IO_METHOD_USERPTR:
-		/* Nothing to do. */
-		break;
+	type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+	if (-1 == xioctl (pdev->fd, VIDIOC_STREAMOFF, &type))
+		dbg_e ("VIDIOC_STREAMOFF");
 
-	case IO_METHOD_MMAP:
-		type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-		if (-1 == xioctl (pdev->fd, VIDIOC_STREAMOFF, &type))
-			dbg_e ("VIDIOC_STREAMOFF");
-		break;
-
-	default:
-		break;
-	}
-
-	return;
-}
-
-void device_set_io_method(io_method m)
-{
-	gdev.io_mode = m;
 	return;
 }
 
@@ -296,24 +251,9 @@ void device_init(void)
 		return;
 	}
 
-	switch (pdev->io_mode)
-	{
-	case IO_METHOD_READ:
-		if (!(cap.capabilities & V4L2_CAP_READWRITE)) {
-			dbg_e ("%s does not support read i/o\n", pdev->devname);
-			return ;
-		}
-		break;
-	case IO_METHOD_MMAP:
-	case IO_METHOD_USERPTR:
-		if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
-			dbg_e ("%s does not support streaming i/o\n", pdev->devname);
-			return ;
-		}
-		break;
-
-	default:
-		break;
+	if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
+		dbg_e ("%s does not support streaming i/o\n", pdev->devname);
+		return ;
 	}
 
 	memset (&cropcap, 0x0, sizeof(struct v4l2_cropcap));
@@ -358,19 +298,7 @@ void device_init(void)
 	if (fmt.fmt.pix.sizeimage < min)
 		fmt.fmt.pix.sizeimage = min;
 
-	switch (pdev->io_mode)
-	{
-	case IO_METHOD_MMAP:
-		init_mmap ();
-		break;
-
-	case IO_METHOD_READ:
-	case IO_METHOD_USERPTR:
-		break;
-
-	default:
-		break;
-	}
+	init_mmap ();
 
 	return ;
 }
@@ -389,22 +317,14 @@ void device_uninit(void)
 	uint32_t i = 0;
 	device_t *pdev = &gdev;
 
-	switch(pdev->io_mode)
+	for (i = 0; i < pdev->n_buffers; ++i)
 	{
-	case IO_METHOD_MMAP:
-		for (i = 0; i < pdev->n_buffers; ++i)
-			if (-1 == munmap (pdev->buffers[i].start, pdev->buffers[i].length)) {
-				dbg_e ("munmap");
-				return ;
-			}
-		break;
-
-	case IO_METHOD_READ:
-	case IO_METHOD_USERPTR:
-
-		break;
+		if (-1 == munmap (pdev->buffers[i].start, pdev->buffers[i].length))
+		{
+			dbg_e ("munmap");
+			return ;
+		}
 	}
-
 	free(pdev->buffers);
 
 	return;

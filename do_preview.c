@@ -88,8 +88,6 @@ static void *preview(void *arg)
 {
 	pthread_cleanup_push(cleanup, NULL);
 
-	device_set_io_method(IO_METHOD_MMAP);
-
 	/* Todo open device */
 	device_open("/dev/video0");
 
@@ -103,7 +101,7 @@ static void *preview(void *arg)
 	capture_start();
 
 	/* Todo loop */
-	capture_loop(process_frame);
+	capture_loop(process_frame, CAPTURE_LOOP);
 
 	pthread_cleanup_pop(0);
 

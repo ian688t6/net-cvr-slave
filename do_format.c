@@ -11,6 +11,8 @@ int32_t do_format(msg_t *pmsg)
 {
 	int32_t ret = GCOS_SUCC;
 
+	dbg_i("format sd\n");
+
 	return ret;
 }
 

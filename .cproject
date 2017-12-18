@@ -37,9 +37,11 @@
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="x264"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="m"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="dl"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="jpeg"/>
 								</option>
 								<option id="gnu.c.link.option.paths.88528430" name="Library search path (-L)" superClass="gnu.c.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/cvr-slave/libs/x264}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/cvr-slave/libs/jpg}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.1003049696" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>

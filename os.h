@@ -16,6 +16,7 @@ extern "C" {
 #include <fcntl.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <limits.h>
 #include <sys/socket.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>

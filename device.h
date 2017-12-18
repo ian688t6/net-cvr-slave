@@ -10,10 +10,9 @@ extern "C" {
 
 typedef enum
 {
-	IO_METHOD_READ,
-	IO_METHOD_MMAP,
-	IO_METHOD_USERPTR,
-} io_method;
+	CAPTURE_ONCE = 0,
+	CAPTURE_LOOP,
+} capture_method;
 
 struct buffer
 {
@@ -25,20 +24,18 @@ typedef struct
 {
 	char devname[16];
 	int32_t fd;
-	io_method io_mode;
+	capture_method mode;
 	int32_t n_buffers;
 	struct buffer *buffers;
 } device_t;
 
 typedef void (*process_cb)(unsigned char * psrc, int32_t len);
 
-extern void capture_loop(process_cb cb);
+extern void capture_loop(process_cb cb, capture_method);
 
 extern void capture_start(void);
 
 extern void capture_stop(void);
-
-extern void device_set_io_method(io_method m);
 
 extern void device_open(char *devname);
 
