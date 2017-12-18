@@ -11,6 +11,14 @@ extern "C" {
 
 typedef struct
 {
+	uint8_t 	y0;
+	uint8_t		v;
+	uint8_t		y1;
+	uint8_t 	u;
+} pixel_t;
+
+typedef struct
+{
 	x264_param_t 	param;
 	x264_picture_t	picture;
 	x264_nal_t		*nal;
@@ -19,6 +27,57 @@ typedef struct
 
 static h264_t g_h264;
 
+static void convert(x264_image_t *img, int32_t w, int32_t h, uint8_t *pdata, uint32_t flipuv)
+{
+	int32_t i = 0;
+	int32_t j = 0;
+	uint8_t *plane_y 	= NULL;
+	uint8_t *plane_u 	= NULL;
+	uint8_t *plane_v 	= NULL;
+	pixel_t	*psrc 		= NULL;
+
+	if ((NULL == img) || (NULL == pdata))
+		return;
+
+	plane_y = (uint8_t *)img->plane[0];
+	plane_u = (uint8_t *)img->plane[1];
+	plane_v = (uint8_t *)img->plane[2];
+	psrc 	= (pixel_t *)pdata;
+
+	for (i = 1; i <= h; i ++)
+	{
+		for (j = 1; j <= w / 2; j ++)
+		{
+			if (j % 2) {
+				plane_y[0] = psrc->y0;
+				plane_y[1] = psrc->y1;
+			} else {
+				plane_y[2] = psrc->y0;
+				plane_y[3] = psrc->y1;
+				plane_y += 4;
+			}
+
+			if (i % 2)
+			{
+				if (flipuv) {
+					plane_u[0] = psrc->u;
+					plane_v[0] = psrc->v;
+				} else {
+					plane_v[0] = psrc->u;
+					plane_u[0] = psrc->v;
+				}
+				plane_u ++;
+				plane_v ++;
+			}
+		}
+		psrc ++;
+	}
+
+
+	return ;
+}
+
+#if 0
 static void x264_setimg(x264_image_t *img, int32_t w, int32_t h, unsigned char *data)
 {
 	int32_t i = 0, j = 0;
@@ -52,6 +111,7 @@ static void x264_setimg(x264_image_t *img, int32_t w, int32_t h, unsigned char *
 
 	return;
 }
+#endif
 
 void h264_encode_begin(int32_t w, int32_t h)
 {
@@ -94,7 +154,7 @@ int32_t h264_encode(unsigned char *data, int w, int h, unsigned char *out)
 	h264_t *ph264 = &g_h264;
 	x264_picture_t pic_out;
 
-	x264_setimg(&ph264->picture.img, w, h, data);
+	convert(&ph264->picture.img, w, h, data, 1);
 	frame_size = x264_encoder_encode(ph264->x264, &ph264->nal, &n_nal, &ph264->picture, &pic_out);
 	if (frame_size > 0)
 	{
