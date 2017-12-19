@@ -80,7 +80,7 @@ int32_t do_takephoto(msg_t *pmsg)
 	current_frame_t *pframe = NULL;
 
 	pframe = capture_once();
-	if (pframe->frame)
+	if (NULL == pframe->frame)
 	{
 		dbg_e("capture photo once fail\n");
 		return GCOS_FAIL;

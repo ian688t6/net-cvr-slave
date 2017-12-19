@@ -43,7 +43,7 @@ static void cleanup(void *data)
 	device_close();
 }
 
-static int32_t send_frame(uint8_t *pframe, int32_t len)
+static void send_frame(uint8_t *pframe, int32_t len)
 {
 	msg_t msg;
 	int32_t ret = 0;
@@ -57,30 +57,30 @@ static int32_t send_frame(uint8_t *pframe, int32_t len)
 	ret = msg_sendto(0, &msg);
 	if (ret == GCOS_FAIL)
 	{
-		dbg_e("send frame fail retlen: %d\n", ret);
-		return GCOS_FAIL;
+		dbg_e("send frame fail retlen: %d framelen: %d\n", ret, len);
+		return ;
 	}
-	return GCOS_SUCC;
+
+	return ;
 }
+
 
 static void process_frame(unsigned char *pdata, int len)
 {
-	int32_t framelen 	= 0;
-	uint8_t *pframe 	= (uint8_t *) malloc(sizeof(uint8_t) * PIXEL_WIDTH * PIXEL_HEIGHT * 1.5);
-	if (NULL == pframe)
-	{
-		dbg_e("pframe alloc fail\n");
+	uint64_t t1 = 0;
+	uint64_t t2 = 0;
+	struct timeval tv;
+
+	gettimeofday(&tv, NULL);
+	t1 = tv.tv_sec * 1000 * 1000 + tv.tv_usec;
+	h264_encode(pdata, PIXEL_WIDTH, PIXEL_HEIGHT, send_frame);
+	gettimeofday(&tv, NULL);
+	t2 = tv.tv_sec * 1000 * 1000 + tv.tv_usec;
+//	dbg_i("t: %ld\n", t2 - t1);
+	if (30 * 1000 <= (t2 - t1))
 		return;
-	}
+	usleep(30 * 1000 - (t2 - t1));
 
-	memset(pframe, 0x0, sizeof(uint8_t) * PIXEL_WIDTH * PIXEL_HEIGHT * 1.5);
-
-	framelen = h264_encode(pdata, PIXEL_WIDTH, PIXEL_HEIGHT, pframe);
-//	dumpframe(pframe, framelen);
-	send_frame(pframe, framelen);
-	free(pframe);
-	usleep(15*1000);
-//	dbg_i("time: %lldus\n", L2 - L1);
 	return ;
 }
 

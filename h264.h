@@ -5,9 +5,11 @@
 extern "C" {
 #endif
 
+typedef void (*done_cb)(uint8_t * pframe, int32_t len);
+
 extern void h264_encode_begin(int32_t w, int32_t h);
 
-extern int32_t h264_encode(unsigned char *data, int w, int h, unsigned char *out);
+extern void h264_encode(uint8_t *data, int32_t w, int32_t h, done_cb done);
 
 extern void h264_encode_end(void);
 

@@ -304,7 +304,7 @@ void device_init(void)
 	fmt.fmt.pix.width       = PIXEL_WIDTH;
 	fmt.fmt.pix.height      = PIXEL_HEIGHT;
 	fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
-	fmt.fmt.pix.field       = V4L2_FIELD_NONE;
+	fmt.fmt.pix.field       = V4L2_FIELD_INTERLACED;
 	if (-1 == xioctl (pdev->fd, VIDIOC_S_FMT, &fmt)) {
 		dbg_e ("VIDIOC_S_FMT");
 		return ;
