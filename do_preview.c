@@ -77,9 +77,9 @@ static void process_frame(unsigned char *pdata, int len)
 	gettimeofday(&tv, NULL);
 	t2 = tv.tv_sec * 1000 * 1000 + tv.tv_usec;
 //	dbg_i("t: %ld\n", t2 - t1);
-	if (30 * 1000 <= (t2 - t1))
+	if (25 * 1000 <= (t2 - t1))
 		return;
-	usleep(30 * 1000 - (t2 - t1));
+	usleep(25 * 1000 - (t2 - t1));
 
 	return ;
 }

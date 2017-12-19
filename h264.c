@@ -35,27 +35,30 @@ static void convert(x264_image_t *img, int32_t w, int32_t h, unsigned char *pdat
 	u = img->plane[1];
 	v = img->plane[2];
 
-	for(i = 0; i < (2 * w * h); i += 2)
-	{
-		*(y+ idx_y) = *(pdata + i);
-		idx_y++;
-	}
 
-	for(i = 0; i < h; i += 2)
+	for (i = 0; i < h; i ++)
 	{
-		for(j= (i* w * 2 + 1); j < (i * w * 2+ w * 2); j += 2)
+		for (j = 0; j < 2 * w; j ++)
 		{
-			if(is_u)
-			{
-				*(u + idx_u) = *(pdata+j);
-				idx_u ++;
-				is_u = 0;
+			if (0 == j % 2) {
+				*(y + idx_y) = *(pdata + i * w * 2 + j);
+				idx_y ++;
 			}
-			else
-			{
-				*(v + idx_v) = *(pdata+j);
-				idx_v ++;
-				is_u = 1;
+			else {
+				if (0 == i % 2) {
+					if (is_u)
+					{
+						*(u + idx_u) = *(pdata + i * w * 2 +j);
+						is_u = 0;
+						idx_u ++;
+					}
+					else
+					{
+						*(v + idx_v) = *(pdata + i * w * 2 +j);
+						is_u = 1;
+						idx_v ++;
+					}
+				}
 			}
 		}
 	}

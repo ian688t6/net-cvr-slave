@@ -43,7 +43,7 @@ static int32_t read_frame(process_cb cb)
 	}
 	assert (buf.index < pdev->n_buffers);
 	//process_image (pdev->buffers[buf.index].start);
-	memcpy(pdev->current_frame.frame, pdev->buffers[buf.index].start, pdev->current_frame.length);
+//	memcpy(pdev->current_frame.frame, pdev->buffers[buf.index].start, pdev->current_frame.length);
 	cb(pdev->buffers[buf.index].start, pdev->buffers[buf.index].length);
 
 	if (-1 == xioctl (pdev->fd, VIDIOC_QBUF, &buf)) {
