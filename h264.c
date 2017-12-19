@@ -35,7 +35,6 @@ static void convert(x264_image_t *img, int32_t w, int32_t h, unsigned char *pdat
 	u = img->plane[1];
 	v = img->plane[2];
 
-
 	for (i = 0; i < h; i ++)
 	{
 		for (j = 0; j < 2 * w; j ++)

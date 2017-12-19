@@ -28,7 +28,7 @@ all: cvr-slave
 cvr-slave: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Cross GCC Linker'
-	gcc -L"/home/jyin/eclipse-workspace/cvr-slave/libs/x264" -L"/home/jyin/eclipse-workspace/cvr-slave/libs/jpg" -o "cvr-slave" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -L"/home/jyin/eclipse-workspace/cvr-slave/libs/x264" -o "cvr-slave" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
